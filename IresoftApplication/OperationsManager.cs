@@ -20,7 +20,7 @@ namespace IresoftApplication
             this.operation = new Operations();
             this.cts = new CancellationToken();
             this.operation.SignalEvent += (sender, value, maxValue) => OnSignalReceived(value, maxValue);
-            
+
         }
 
         private void OnSignalReceived(int value, bool maxValue)
@@ -32,10 +32,11 @@ namespace IresoftApplication
         {
             if (!this.TestValidPath(path))
                 return;
-           
+
             this.PrepareFinishLoadFile(true);
-            await operation.LoadFileAsync(path, cts);
+            this.mainString = await operation.LoadFileAsync(path, cts);
             this.PrepareFinishLoadFile(false);
+            this.Calculate();
         }
 
         //Prefore/Finish before/after load file
@@ -56,10 +57,31 @@ namespace IresoftApplication
 
         private void Calculate()
         {
-            textBox_pocet_vet.Text = CalculateCountSentences().ToString();
-            textBox_pocet_slov.Text = CalculateCountWords().ToString();
-            textBox_pocet_znaku.Text = CalculateCountLetter().ToString();
-            textBox_pocet_radku.Text = CalculateCountRadek().ToString();
+            setPocetVet();
+            setPocetSlov();
+            setPocetZnaku();
+            setPocetRadku();
+        }
+
+        private void setPocetVet()
+        {
+            this.form1.setPocetVet(Operations.CalculateCountSentences(this.mainString).ToString());
+        }
+
+        private void setPocetSlov()
+        {
+            this.form1.setPocetSlov(Operations.CalculateCountWords(this.mainString).ToString());
+        }
+
+        private void setPocetZnaku()
+        {
+            this.form1.setPocetZnaku(Operations.CalculateCountLetter(this.mainString).ToString());
+        }
+
+        private void setPocetRadku()
+        {
+            this.form1.setPocetRadku(Operations.CalculateCountRadek(this.mainString).ToString());
+
         }
 
         internal void CopyOperatin()
@@ -75,9 +97,10 @@ namespace IresoftApplication
             }
         }
 
-        internal void DeleteBlackLines()
+        internal async Task DeleteBlackLines()
         {
-            throw new NotImplementedException();
+           this.mainString = await this.operation.OdstranPrazdneRadky(this.form1.getPocetRadku(), this.mainString);
+            this.setPocetRadku();
         }
 
         internal void DeleteDiacticInText()

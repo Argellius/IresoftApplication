@@ -23,7 +23,7 @@ namespace IresoftApplication
             SignalEvent?.Invoke(this, value, maxValue);
         }
 
-        public int CalculateCountSentences(string mainString)
+        public static int CalculateCountSentences(string mainString)
         {
             if (string.IsNullOrEmpty(mainString)) return 0;
 
@@ -34,7 +34,7 @@ namespace IresoftApplication
             return sentenceCount;
         }
 
-        private int CalculateCountWords()
+        public static int CalculateCountWords(string mainString)
         {
             if (string.IsNullOrEmpty(mainString)) return 0;
 
@@ -43,12 +43,12 @@ namespace IresoftApplication
             return Count;
         }
 
-        private int CalculateCountLetter()
+        public static int CalculateCountLetter(string mainString)
         {
             return mainString.ToCharArray().Count();
         }
 
-        private int CalculateCountRadek()
+        public static int CalculateCountRadek(string mainString)
         {
             if (string.IsNullOrEmpty(mainString)) return 0;
 
@@ -82,14 +82,29 @@ namespace IresoftApplication
 
 
 
-        private void OdstranPrazdneRadky()
+        public async Task<string> OdstranPrazdneRadky(int pocetRadku, string mainString)
         {
-            var lines = mainString.ToString().Replace("\r", "").Split('\n')
-                            .Where(x => !string.IsNullOrEmpty(x))
-                            .ToArray();
+            int pocetRadkuTemp = pocetRadku;
+            StringBuilder stringBuilder = new StringBuilder();
+            SendSignalToProgressBar(pocetRadku, true);
+            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
-            mainString = String.Empty;
-            mainString = string.Join("\n", lines);
+            using (StringReader stringReader = new StringReader(mainString))
+            {                
+                string line;
+                while ((line = await stringReader.ReadLineAsync()) != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(line.Trim()))
+                    {
+                        stringBuilder.Append(line);
+                        SendSignalToProgressBar(pocetRadku - (--pocetRadkuTemp), true);
+                    }
+                }
+            }
+
+            tcs.SetResult(stringBuilder.ToString());
+
+            return await tcs.Task;
         }
 
         private void OdstranMezeryInterpunkcniZnamenka()

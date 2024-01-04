@@ -105,5 +105,30 @@ namespace IresoftApplication
         {
             uC_ProgressBar1.Visible = v;
         }
+
+        internal void setPocetVet(string v)
+        {
+            this.label_pocet_vet.Text = v;
+        }
+
+        internal void setPocetSlov(string v)
+        {
+            this.label_pocet_slov.Text = v;
+        }
+
+        internal void setPocetZnaku(string v)
+        {
+            this.label_pocet_znaku.Text = v;
+        }
+
+        internal void setPocetRadku(string v)
+        {
+            this.label_pocet_radku.Text = v;
+        }
+
+        internal int getPocetRadku()
+        {
+            return Convert.ToInt32(this.label_pocet_radku.Text);
+        }
     }
 }
