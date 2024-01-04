@@ -15,6 +15,11 @@ namespace IresoftApplication.UserControls
 
         private Form1? parent;
 
+        // Define a delegate that matches the signature of the event
+        public delegate void SignalEventHandler(int value);
+
+        // Define an event using the delegate
+        public event SignalEventHandler SignalEvent;
 
 
         public UC_ProgressBar()
@@ -30,7 +35,7 @@ namespace IresoftApplication.UserControls
         }
 
         public void setCurrentValue(string value)
-        {
+        {            
             this.label_currentV.Text = value;
         }
 
