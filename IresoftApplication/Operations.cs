@@ -13,17 +13,17 @@ namespace IresoftApplication
 {
     public class Operations
     {
-        // Define a delegate and event for the signal
-        public delegate void SignalEventHandler(object sender, int value, bool maxValue);
+        private OperationsManager parent;
 
-        public event SignalEventHandler SignalEvent;
 
-        // Method to initiate the signal
-        private void SendSignalToProgressBar(int value, bool maxValue)
+        public void setParent(OperationsManager parent)
+        { this.parent = parent; }
+
+        private void SendSignalToProgressBar(int value, bool max)
         {
-            // Check if there are subscribers to the event
-            SignalEvent?.Invoke(this, value, maxValue);
+            this.parent.SendSignalToProgressBar(value, max);
         }
+
 
         public static int CalculateCountSentences(string mainString)
         {
@@ -148,11 +148,12 @@ namespace IresoftApplication
 
         internal async Task<string> LoadFileAsync(string path, CancellationToken cts)
         {
-            char[] buffer = new char[4096];
+            char[] buffer = new char[1];
             int read;
             var resultBuilder = new StringBuilder();
 
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+            
 
             try
             {
@@ -165,8 +166,10 @@ namespace IresoftApplication
                     while ((read = await reader.ReadAsync(buffer, cts)
                         .ConfigureAwait(false)) > 0)
                     {
+                        await Task.Delay(250);
                         resultBuilder.Append(buffer, 0, read);
                         // Raise the event
+                        Debug.WriteLine("Posílám do progress baru: " + read);
                         SendSignalToProgressBar(read, false);
                     }
 

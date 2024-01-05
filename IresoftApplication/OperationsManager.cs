@@ -11,21 +11,27 @@ namespace IresoftApplication
     public class OperationsManager
     {
         private Operations operation;
-        public Form1 form1;
-        private string mainString;
+        public Form1 parent;
+        private StringBuilder mainString;
         private CancellationTokenSource cts;
 
-        public OperationsManager()
-        {
-            this.operation = new Operations();
-            this.cts = new CancellationTokenSource();
-            this.operation.SignalEvent += (sender, value, maxValue) => OnSignalReceived(value, maxValue);
+        public delegate void ValueChangedHandler(int value, bool max);
+        public event ValueChangedHandler ValueChanged;
 
+        // Method to initiate the signal
+        public void SendSignalToProgressBar(int value, bool max)
+        {
+            // Check if there are subscribers to the event
+            ValueChanged?.Invoke(value, max);
         }
 
-        private void OnSignalReceived(int value, bool maxValue)
+        public OperationsManager(Form1 form)
         {
-            form1.sendValueToProgressBar(value, maxValue);
+            this.parent = form;
+            this.mainString = new StringBuilder();
+            this.operation = new Operations();
+            this.cts = new CancellationTokenSource();
+            this.operation.setParent(this);
         }
 
         internal async void StartLoadFile(string path)
@@ -34,7 +40,8 @@ namespace IresoftApplication
                 return;
 
             this.PrepareFinishLoadFile(true);
-            this.mainString = await operation.LoadFileAsync(path, cts.Token);
+            this.mainString.Clear();
+            this.mainString.Append(await operation.LoadFileAsync(path, cts.Token));
             this.PrepareFinishLoadFile(false);
             this.Calculate();
         }
@@ -44,8 +51,8 @@ namespace IresoftApplication
         //false = after
         private void PrepareFinishLoadFile(bool prepare)
         {
-            form1.Cursor = prepare ? Cursors.WaitCursor : Cursors.Default;
-            form1.setEnableUI(true);
+            parent.Cursor = prepare ? Cursors.WaitCursor : Cursors.Default;
+            parent.setEnableUI(true);
         }
 
         private bool TestValidPath(string path)
@@ -65,66 +72,64 @@ namespace IresoftApplication
 
         private void setPocetVet()
         {
-            this.form1.setPocetVet(Operations.CalculateCountSentences(this.mainString).ToString());
+            this.parent.setPocetVet(Operations.CalculateCountSentences(this.mainString.ToString()).ToString());
         }
 
         private void setPocetSlov()
         {
-            this.form1.setPocetSlov(Operations.CalculateCountWords(this.mainString).ToString());
+            this.parent.setPocetSlov(Operations.CalculateCountWords(this.mainString.ToString()).ToString());
         }
 
         private void setPocetZnaku()
         {
-            this.form1.setPocetZnaku(Operations.CalculateCountLetter(this.mainString).ToString());
+            this.parent.setPocetZnaku(Operations.CalculateCountLetter(this.mainString.ToString()).ToString());
         }
 
         private void setPocetRadku()
         {
-            this.form1.setPocetRadku(Operations.CalculateCountRadek(this.mainString).ToString());
+            this.parent.setPocetRadku(Operations.CalculateCountRadek(this.mainString.ToString()).ToString());
 
         }
 
         private int getPocetRadku()
         {
-            return this.form1.getPocetRadku();
+            return this.parent.getPocetRadku();
 
         }
 
         private int getPocetZnaku()
         {
-            return this.form1.getPocetZnaku();
+            return this.parent.getPocetZnaku();
         }
 
-        internal async void CopyOperation()
+        internal async void CopyOperation(string path)
         {
 
             // Get the selected file name and create a StreamWriter
 
             await this.operation.saveFile(path, mainString, cts.Token);
-
-            using (StreamWriter sw = new StreamWriter(fileName))
-            {
-                // Write the content of StringBuilder to the file
-                sw.Write(mainString.ToString());
-            }
+            
         }
 
         internal async Task DeleteBlankLines()
         {
             //KONTROLY
-            this.mainString = await this.operation.OdstranPrazdneRadky(this.getPocetRadku(), this.mainString, cts.Token);
+            this.mainString.Clear();
+            this.mainString.Append(await this.operation.OdstranPrazdneRadky(this.getPocetRadku(), this.mainString.ToString(), cts.Token));
             this.setPocetRadku();
         }
 
         internal async Task DeleteDiacticInText()
         {
-            this.mainString = await this.operation.OdstranDiakritiku(this.getPocetZnaku(), this.mainString, cts.Token);
+            this.mainString.Clear();
+            this.mainString.Append(await this.operation.OdstranDiakritiku(this.getPocetZnaku(), this.mainString.ToString(), cts.Token));
             this.setPocetZnaku();
         }
 
         internal async Task DeleteWhiteLinesPuncChars()
         {
-            this.mainString = await this.operation.OdstranMezeryInterpunkcniZnamenka(this.getPocetZnaku(), this.mainString, cts.Token);
+            this.mainString.Clear();
+            this.mainString.Append(await this.operation.OdstranMezeryInterpunkcniZnamenka(this.getPocetZnaku(), this.mainString.ToString(), cts.Token));
             this.setPocetZnaku();
         }
 

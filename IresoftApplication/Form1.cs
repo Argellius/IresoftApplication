@@ -1,3 +1,4 @@
+using IresoftApplication.UserControls;
 using System;
 using System.Globalization;
 using System.IO;
@@ -7,18 +8,20 @@ namespace IresoftApplication
 {
     public partial class Form1 : Form
     {
-        private OperationsManager operationsManager;
+        private OperationsManager operationManager;
 
         public object CilovaCesta { get; private set; }
 
         public Form1()
         {
-            InitializeComponent();
+            InitializeComponent();     
+            this.operationManager = new OperationsManager(this);
             openFileDialog.Multiselect = false;
             openFileDialog.Title = "Naètení souboru";
             openFileDialog.FileName = String.Empty;
             saveFileDialog.Filter = "Textové soubory (*.txt)|*.txt|CSV soubory (*.csv)|*.csv|Všechny soubory (*.*)|*.*";
-
+            // Pøidání obslužné metody k události v objektu Operation
+            operationManager.ValueChanged += uC_ProgressBar.HandleValueChanged;
         }
 
         private void UserControl_SignalReceived(object sender, EventArgs e)
@@ -30,7 +33,7 @@ namespace IresoftApplication
         {
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                this.operationsManager.StartLoadFile(openFileDialog.FileName.ToString());
+                this.operationManager.StartLoadFile(openFileDialog.FileName.ToString());
             }
         }
 
@@ -57,38 +60,28 @@ namespace IresoftApplication
         //OPERATION BUTTONS
         private void button_diacritic_Click(object sender, EventArgs e)
         {
-            this.operationsManager.DeleteDiacticInText();
+            this.operationManager.DeleteDiacticInText();
         }
 
         private void button_copy_Click(object sender, EventArgs e)
         {
-            this.operationsManager.CopyOperation();
+            this.operationManager.CopyOperation(this.saveFileDialog.FileName);
         }
 
         private void button_blank_lines_Click(object sender, EventArgs e)
         {
-            this.operationsManager.DeleteBlankLines();
+            this.operationManager.DeleteBlankLines();
 
         }
 
         private void button_white_punc_Click(object sender, EventArgs e)
         {
-            this.operationsManager.DeleteWhiteLinesPuncChars();
+            this.operationManager.DeleteWhiteLinesPuncChars();
         }
 
         internal void StopProcess()
         {
-            this.operationsManager.StopProcessingFile();
-        }
-
-        internal void sendValueToProgressBar(int value, bool maxValue)
-        {
-            if (uC_ProgressBar1.Visible == false) { uC_ProgressBar1.Visible = true; }
-
-            if (maxValue)
-                uC_ProgressBar1.setMaxValue(value.ToString());
-
-            uC_ProgressBar1.setCurrentValue(value.ToString());
+            this.operationManager.StopProcessingFile();
         }
 
         internal void SetProgressBar(CancellationToken cts)
@@ -98,27 +91,27 @@ namespace IresoftApplication
 
         internal void ShowProgressBar(bool v)
         {
-            uC_ProgressBar1.Visible = v;
+            uC_ProgressBar.Visible = v;
         }
 
         internal void setPocetVet(string v)
         {
-            this.label_pocet_vet.Text = v;
+            this.textBox_pocet_vet.Text = v;
         }
 
         internal void setPocetSlov(string v)
         {
-            this.label_pocet_slov.Text = v;
+            this.textBox_pocet_slov.Text = v;
         }
 
         internal void setPocetZnaku(string v)
         {
-            this.label_pocet_znaku.Text = v;
+            this.textBox_pocet_znaku.Text = v;
         }
 
         internal void setPocetRadku(string v)
         {
-            this.label_pocet_radku.Text = v;
+            this.textBox_pocet_radku.Text = v;
         }
 
         internal int getPocetRadku()

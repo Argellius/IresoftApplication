@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace IresoftApplication.UserControls
 {
@@ -14,18 +17,16 @@ namespace IresoftApplication.UserControls
     {
 
         private Form1? parent;
-
-        // Define a delegate that matches the signature of the event
-        public delegate void SignalEventHandler(int value);
-
-        // Define an event using the delegate
-        public event SignalEventHandler SignalEvent;
-
+        private int currentValue = 0;
 
         public UC_ProgressBar()
         {
             InitializeComponent();
-            parent = this.Parent as Form1 ?? throw new Exception();
+        }
+
+        public void setParent(Form1? form)
+        {
+            parent = form as Form1 ?? throw new Exception();
 
         }
 
@@ -34,15 +35,43 @@ namespace IresoftApplication.UserControls
 
         }
 
-        public void setCurrentValue(string value)
-        {            
-            this.label_currentV.Text = value;
+        // Obslužná metoda pro událost změny hodnoty
+        public void HandleValueChanged(int val, bool max)
+        {
+
+            if (max) { 
+                setMaxValue(val);
+                return;
+            }
+
+            var value = ProcessValue(val);
+
+            if (label_currentV.InvokeRequired)
+            {
+                label_currentV.Invoke(new Action(() => { label_currentV.Text = value.ToString(); }));
+            }
+            else
+            {
+                label_currentV.Text = value.ToString();
+            }
         }
 
-
-        public void setMaxValue(string value)
+        private string ProcessValue(int value)
         {
-            this.label_maxV.Text = value + " %";
+            this.currentValue = currentValue + value;
+            return currentValue.ToString();
+        }
+
+        public void setMaxValue(int value)
+        {
+            if (label_maxV.InvokeRequired)
+            {
+                label_maxV.Invoke(new Action(() => { label_maxV.Text = value.ToString(); }));
+            }
+            else
+            {
+                label_maxV.Text = value.ToString();
+            }
         }
 
 
