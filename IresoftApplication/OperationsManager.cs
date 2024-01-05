@@ -128,7 +128,6 @@ namespace IresoftApplication
             this.setPocetZnaku();
         }
 
-
         private bool TryReadFile(string path)
         {
             try
@@ -154,7 +153,5 @@ namespace IresoftApplication
                 cts.Cancel();
             }
         }
-
-
     }
 }

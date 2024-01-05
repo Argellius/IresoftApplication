@@ -206,7 +206,4 @@ namespace IresoftApplication
             return;
         }
     }
-
-
-
 }

@@ -9,7 +9,6 @@ namespace IresoftApplication
     {
         private OperationsManager operationsManager;
 
-
         public object CilovaCesta { get; private set; }
 
         public Form1()
@@ -21,7 +20,6 @@ namespace IresoftApplication
             saveFileDialog.Filter = "Textové soubory (*.txt)|*.txt|CSV soubory (*.csv)|*.csv|Všechny soubory (*.*)|*.*";
 
         }
-
 
         private void UserControl_SignalReceived(object sender, EventArgs e)
         {
@@ -35,7 +33,6 @@ namespace IresoftApplication
                 this.operationsManager.StartLoadFile(openFileDialog.FileName.ToString());
             }
         }
-
 
         public void setEnableUI(bool v)
         {
@@ -57,9 +54,7 @@ namespace IresoftApplication
             }
         }
 
-
         //OPERATION BUTTONS
-
         private void button_diacritic_Click(object sender, EventArgs e)
         {
             this.operationsManager.DeleteDiacticInText();
