@@ -67,12 +67,12 @@ namespace IresoftApplication
 
         private void button_copy_Click(object sender, EventArgs e)
         {
-            this.operationsManager.CopyOperatin();
+            this.operationsManager.CopyOperation();
         }
 
         private void button_blank_lines_Click(object sender, EventArgs e)
         {
-            this.operationsManager.DeleteBlackLines();
+            this.operationsManager.DeleteBlankLines();
 
         }
 
@@ -129,6 +129,11 @@ namespace IresoftApplication
         internal int getPocetRadku()
         {
             return Convert.ToInt32(this.label_pocet_radku.Text);
+        }
+
+        internal int getPocetZnaku()
+        {
+            return Convert.ToInt32(this.label_pocet_znaku.Text);
         }
     }
 }

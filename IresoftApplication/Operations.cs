@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IresoftApplication
@@ -59,30 +61,38 @@ namespace IresoftApplication
 
         //METHODS FOR OPERATION B.
 
-        private void OdstranDiakritiku()
+        public async Task<string> OdstranDiakritiku(int pocetZnaku, string mainString, CancellationToken cts)
         {
-            if (string.IsNullOrEmpty(mainString.ToString()))
-                return;
+            int pocetZnakuTemp = pocetZnaku;
+            char[] buffer = new char[1];
+            StringBuilder stringBuilder = new StringBuilder();
+            SendSignalToProgressBar(pocetZnaku, true);
+            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+            int read;
 
-            // Převedení řetězce na Normalization Form D (NFD)
-            string normalizedString = mainString.ToString().Normalize(NormalizationForm.FormD);
-
-            // Odstranění diakritiky (znaků s diakritikou)
-            StringBuilder result = new StringBuilder();
-
-            foreach (char c in normalizedString)
+            using (StringReader stringReader = new StringReader(mainString))
             {
-                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-                    result.Append(c);
+                while ((read = await stringReader.ReadAsync(buffer, cts)
+                        .ConfigureAwait(false)) > 0)
+                {
+                    char character = buffer[0];
+
+                    if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+                    {
+                        stringBuilder.Append(character);
+                        SendSignalToProgressBar(pocetZnaku - (--pocetZnakuTemp), false);
+                    }
+                }
             }
 
-            mainString = String.Empty;
-            mainString = result.ToString();
+            tcs.SetResult(stringBuilder.ToString());
+
+            return await tcs.Task;
         }
 
 
 
-        public async Task<string> OdstranPrazdneRadky(int pocetRadku, string mainString)
+        public async Task<string> OdstranPrazdneRadky(int pocetRadku, string mainString, CancellationToken cts)
         {
             int pocetRadkuTemp = pocetRadku;
             StringBuilder stringBuilder = new StringBuilder();
@@ -90,9 +100,9 @@ namespace IresoftApplication
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
             using (StringReader stringReader = new StringReader(mainString))
-            {                
-                string line;
-                while ((line = await stringReader.ReadLineAsync()) != null)
+            {
+                string? line;
+                while ((line = await stringReader.ReadLineAsync(cts)) != null)
                 {
                     if (!string.IsNullOrWhiteSpace(line.Trim()))
                     {
@@ -107,21 +117,33 @@ namespace IresoftApplication
             return await tcs.Task;
         }
 
-        private void OdstranMezeryInterpunkcniZnamenka()
+        public async Task<string> OdstranMezeryInterpunkcniZnamenka(int pocetZnaku, string mainString, CancellationToken cts)
         {
-            StringBuilder sb_temp = new StringBuilder();
+            int pocetZnakuTemp = pocetZnaku;
+            char[] buffer = new char[1];
+            StringBuilder stringBuilder = new StringBuilder();
+            SendSignalToProgressBar(pocetZnaku, true);
+            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+            int read;
 
-            foreach (char ch in mainString.ToString())
+            using (StringReader stringReader = new StringReader(mainString))
             {
-                if (!char.IsWhiteSpace(ch) && !char.IsPunctuation(ch))
+                while ((read = await stringReader.ReadAsync(buffer, cts)
+                        .ConfigureAwait(false)) > 0)
                 {
-                    sb_temp.Append(ch);
+                    char character = buffer[0];
+
+                    if (!char.IsWhiteSpace(character) && !char.IsPunctuation(character))
+                    {
+                        stringBuilder.Append(character);
+                        SendSignalToProgressBar(pocetZnaku - (--pocetZnakuTemp), false);
+                    }
                 }
             }
 
-            mainString = String.Empty;
-            mainString = sb_temp.ToString();
+            tcs.SetResult(stringBuilder.ToString());
 
+            return await tcs.Task;
         }
 
         internal async Task<string> LoadFileAsync(string path, CancellationToken cts)
@@ -162,6 +184,27 @@ namespace IresoftApplication
             return await tcs.Task;
         }
 
+        internal async Task saveFile(string path, StringBuilder mainString, CancellationToken cts)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path, false, Encoding.UTF8))
+                {
+                    SendSignalToProgressBar(1, true);
+
+                    await writer.WriteLineAsync(mainString, cts);
+
+                    SendSignalToProgressBar(1, false);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error write file: {ex.Message}");
+            }
+
+            return;
+        }
     }
 
 

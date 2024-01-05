@@ -13,12 +13,12 @@ namespace IresoftApplication
         private Operations operation;
         public Form1 form1;
         private string mainString;
-        private CancellationToken cts;
+        private CancellationTokenSource cts;
 
         public OperationsManager()
         {
             this.operation = new Operations();
-            this.cts = new CancellationToken();
+            this.cts = new CancellationTokenSource();
             this.operation.SignalEvent += (sender, value, maxValue) => OnSignalReceived(value, maxValue);
 
         }
@@ -34,7 +34,7 @@ namespace IresoftApplication
                 return;
 
             this.PrepareFinishLoadFile(true);
-            this.mainString = await operation.LoadFileAsync(path, cts);
+            this.mainString = await operation.LoadFileAsync(path, cts.Token);
             this.PrepareFinishLoadFile(false);
             this.Calculate();
         }
@@ -84,11 +84,23 @@ namespace IresoftApplication
 
         }
 
-        internal void CopyOperatin()
+        private int getPocetRadku()
+        {
+            return this.form1.getPocetRadku();
+
+        }
+
+        private int getPocetZnaku()
+        {
+            return this.form1.getPocetZnaku();
+        }
+
+        internal async void CopyOperation()
         {
 
             // Get the selected file name and create a StreamWriter
-            string fileName = saveFileDialog.FileName;
+
+            await this.operation.saveFile(path, mainString, cts.Token);
 
             using (StreamWriter sw = new StreamWriter(fileName))
             {
@@ -97,22 +109,25 @@ namespace IresoftApplication
             }
         }
 
-        internal async Task DeleteBlackLines()
+        internal async Task DeleteBlankLines()
         {
-           this.mainString = await this.operation.OdstranPrazdneRadky(this.form1.getPocetRadku(), this.mainString);
+            //KONTROLY
+            this.mainString = await this.operation.OdstranPrazdneRadky(this.getPocetRadku(), this.mainString, cts.Token);
             this.setPocetRadku();
         }
 
-        internal void DeleteDiacticInText()
+        internal async Task DeleteDiacticInText()
         {
-            CalculateCountSentences();
+            this.mainString = await this.operation.OdstranDiakritiku(this.getPocetZnaku(), this.mainString, cts.Token);
+            this.setPocetZnaku();
         }
 
-        internal void DeleteWhiteLinesPuncChars()
+        internal async Task DeleteWhiteLinesPuncChars()
         {
-            OdstranMezeryInterpunkcniZnamenka();
-        }       
-        
+            this.mainString = await this.operation.OdstranMezeryInterpunkcniZnamenka(this.getPocetZnaku(), this.mainString, cts.Token);
+            this.setPocetZnaku();
+        }
+
 
         private bool TryReadFile(string path)
         {
@@ -140,6 +155,6 @@ namespace IresoftApplication
             }
         }
 
-      
+
     }
 }
