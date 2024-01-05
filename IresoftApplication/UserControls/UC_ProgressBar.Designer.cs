@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            progressBar1 = new ProgressBar();
+            progressBar = new ProgressBar();
             lbl_operace = new Label();
             label_currentV = new Label();
             label3 = new Label();
@@ -38,10 +38,10 @@
             // 
             // progressBar1
             // 
-            progressBar1.Location = new Point(16, 42);
-            progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(299, 23);
-            progressBar1.TabIndex = 0;
+            progressBar.Location = new Point(16, 42);
+            progressBar.Name = "progressBar1";
+            progressBar.Size = new Size(299, 23);
+            progressBar.TabIndex = 0;
             // 
             // lbl_operace
             // 
@@ -102,7 +102,7 @@
             Controls.Add(label3);
             Controls.Add(label_currentV);
             Controls.Add(lbl_operace);
-            Controls.Add(progressBar1);
+            Controls.Add(progressBar);
             Name = "UC_ProgressBar";
             Size = new Size(338, 182);
             Load += UC_ProgressBar_Load;
@@ -112,7 +112,7 @@
 
         #endregion
 
-        private ProgressBar progressBar1;
+        private ProgressBar progressBar;
         private Label lbl_operace;
         private Label label_currentV;
         private Label label3;

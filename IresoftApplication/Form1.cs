@@ -21,7 +21,6 @@ namespace IresoftApplication
             openFileDialog.FileName = String.Empty;
             saveFileDialog.Filter = "Textové soubory (*.txt)|*.txt|CSV soubory (*.csv)|*.csv|Všechny soubory (*.*)|*.*";
             // Pøidání obslužné metody k události v objektu Operation
-            operationManager.ValueChanged += uC_ProgressBar.HandleValueChanged;
         }
 
         private void UserControl_SignalReceived(object sender, EventArgs e)
@@ -58,9 +57,9 @@ namespace IresoftApplication
         }
 
         //OPERATION BUTTONS
-        private void button_diacritic_Click(object sender, EventArgs e)
+        private async void button_diacritic_Click(object sender, EventArgs e)
         {
-            this.operationManager.DeleteDiacticInText();
+            await this.operationManager.DeleteDiacticInText();
         }
 
         private void button_copy_Click(object sender, EventArgs e)
@@ -68,15 +67,15 @@ namespace IresoftApplication
             this.operationManager.CopyOperation(this.saveFileDialog.FileName);
         }
 
-        private void button_blank_lines_Click(object sender, EventArgs e)
+        private async void button_blank_lines_Click(object sender, EventArgs e)
         {
-            this.operationManager.DeleteBlankLines();
+            await this.operationManager.DeleteBlankLines();
 
         }
 
-        private void button_white_punc_Click(object sender, EventArgs e)
+        private async void button_white_punc_Click(object sender, EventArgs e)
         {
-            this.operationManager.DeleteWhiteLinesPuncChars();
+            await this.operationManager.DeleteWhiteLinesPuncChars();
         }
 
         internal void StopProcess()
@@ -116,12 +115,12 @@ namespace IresoftApplication
 
         internal int getPocetRadku()
         {
-            return Convert.ToInt32(this.label_pocet_radku.Text);
+            return Convert.ToInt32(this.textBox_pocet_radku.Text);
         }
 
         internal int getPocetZnaku()
         {
-            return Convert.ToInt32(this.label_pocet_znaku.Text);
+            return Convert.ToInt32(this.textBox_pocet_znaku.Text);
         }
     }
 }

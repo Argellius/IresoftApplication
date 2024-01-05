@@ -259,6 +259,6 @@
         private System.Windows.Forms.Button button_white_punc;
         private ProgressBar progressBar1;
         private Panel panel1;
-        private UserControls.UC_ProgressBar uC_ProgressBar;
+        public UserControls.UC_ProgressBar uC_ProgressBar;
     }
 }

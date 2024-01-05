@@ -19,6 +19,8 @@ namespace IresoftApplication.UserControls
         private Form1? parent;
         private int currentValue = 0;
 
+        private int MaxValue = 0;
+
         public UC_ProgressBar()
         {
             InitializeComponent();
@@ -35,11 +37,13 @@ namespace IresoftApplication.UserControls
 
         }
 
-        // Obslužná metoda pro událost změny hodnoty
+
         public void HandleValueChanged(int val, bool max)
         {
+            if (val == -1) { currentValue = 0; return; }
 
-            if (max) { 
+            if (max)
+            {
                 setMaxValue(val);
                 return;
             }
@@ -59,24 +63,38 @@ namespace IresoftApplication.UserControls
         private string ProcessValue(int value)
         {
             this.currentValue = currentValue + value;
-            return currentValue.ToString();
+            var progressBarValue = Convert.ToInt16(Math.Round((double)currentValue / MaxValue * 100));
+            this.setProgressBarValue(progressBarValue);
+
+            return progressBarValue.ToString();
+        }
+
+        private void setProgressBarValue(int progressBarValue)
+        {
+            if (progressBar.InvokeRequired)
+            {
+                progressBar.Invoke(new Action(() => { progressBar.Value = progressBarValue; }));
+            }
+            else
+            {
+                progressBar.Value = progressBarValue;
+            }
         }
 
         public void setMaxValue(int value)
         {
+            this.MaxValue = value;
+            value = 100;
+
             if (label_maxV.InvokeRequired)
             {
-                label_maxV.Invoke(new Action(() => { label_maxV.Text = value.ToString(); }));
+                label_maxV.Invoke(new Action(() => { label_maxV.Text = value.ToString() + "%"; }));
             }
             else
             {
-                label_maxV.Text = value.ToString();
+                label_maxV.Text = value.ToString() + "%";
             }
         }
-
-
-
-
 
         private void button_storno_Click(object sender, EventArgs e)
         {

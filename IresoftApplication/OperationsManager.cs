@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IresoftApplication.UserControls;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,23 +16,13 @@ namespace IresoftApplication
         private StringBuilder mainString;
         private CancellationTokenSource cts;
 
-        public delegate void ValueChangedHandler(int value, bool max);
-        public event ValueChangedHandler ValueChanged;
-
-        // Method to initiate the signal
-        public void SendSignalToProgressBar(int value, bool max)
-        {
-            // Check if there are subscribers to the event
-            ValueChanged?.Invoke(value, max);
-        }
-
         public OperationsManager(Form1 form)
         {
             this.parent = form;
             this.mainString = new StringBuilder();
             this.operation = new Operations();
             this.cts = new CancellationTokenSource();
-            this.operation.setParent(this);
+            this.operation.ValueChanged += this.parent.uC_ProgressBar.HandleValueChanged;
         }
 
         internal async void StartLoadFile(string path)
@@ -39,11 +30,21 @@ namespace IresoftApplication
             if (!this.TestValidPath(path))
                 return;
 
-            this.PrepareFinishLoadFile(true);
-            this.mainString.Clear();
-            this.mainString.Append(await operation.LoadFileAsync(path, cts.Token));
-            this.PrepareFinishLoadFile(false);
-            this.Calculate();
+            Task<string> resultTask = operation.LoadFileAsync(path, cts.Token);
+            try
+            {
+                this.ResetProgressBar();
+                this.PrepareFinishLoadFile(true);
+                this.ResetProgressBar();
+                string result = await resultTask;
+                this.mainString.Clear().Append(result);
+                this.PrepareFinishLoadFile(false);
+                this.Calculate();
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("Operation canceled.");
+            }
         }
 
         //Prefore/Finish before/after load file
@@ -108,29 +109,66 @@ namespace IresoftApplication
             // Get the selected file name and create a StreamWriter
 
             await this.operation.saveFile(path, mainString, cts.Token);
-            
+
         }
 
         internal async Task DeleteBlankLines()
         {
             //KONTROLY
-            this.mainString.Clear();
-            this.mainString.Append(await this.operation.OdstranPrazdneRadky(this.getPocetRadku(), this.mainString.ToString(), cts.Token));
-            this.setPocetRadku();
+
+            Task<string> resultTask = this.operation.OdstranPrazdneRadky(this.getPocetRadku(), this.mainString.ToString(), cts.Token);
+            try
+            {
+                this.ResetProgressBar();
+                string result = await resultTask;
+                this.mainString.Clear().Append(result);
+                this.Calculate();
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("Operation canceled.");
+            }
+
         }
 
         internal async Task DeleteDiacticInText()
         {
-            this.mainString.Clear();
-            this.mainString.Append(await this.operation.OdstranDiakritiku(this.getPocetZnaku(), this.mainString.ToString(), cts.Token));
-            this.setPocetZnaku();
+            Task<string> resultTask = this.operation.OdstranDiakritiku(this.getPocetZnaku(), this.mainString.ToString(), cts.Token);
+            try
+            {
+                this.ResetProgressBar();
+                string result = await resultTask;
+                this.mainString.Clear().Append(result);
+                this.setPocetZnaku();
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("Operation canceled.");
+            }
+
+
+
+        }
+
+        private async void ResetProgressBar()
+        {
+            await this.operation.ResetProgressBar();
         }
 
         internal async Task DeleteWhiteLinesPuncChars()
         {
-            this.mainString.Clear();
-            this.mainString.Append(await this.operation.OdstranMezeryInterpunkcniZnamenka(this.getPocetZnaku(), this.mainString.ToString(), cts.Token));
-            this.setPocetZnaku();
+            Task<string> resultTask = this.operation.OdstranMezeryInterpunkcniZnamenka(this.getPocetZnaku(), this.mainString.ToString(), cts.Token);
+            try
+            {
+                this.ResetProgressBar();
+                string result = await resultTask;
+                this.mainString.Clear().Append(result);
+                this.Calculate();
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("Operation canceled.");
+            }
         }
 
         private bool TryReadFile(string path)

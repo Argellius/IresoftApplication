@@ -5,23 +5,23 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace IresoftApplication
 {
     public class Operations
     {
-        private OperationsManager parent;
+        public delegate void ValueChangedHandler(int value, bool max);
+        public event ValueChangedHandler ValueChanged;
 
-
-        public void setParent(OperationsManager parent)
-        { this.parent = parent; }
-
-        private void SendSignalToProgressBar(int value, bool max)
+        public void SendSignalToProgressBar(int value, bool max)
         {
-            this.parent.SendSignalToProgressBar(value, max);
+            // Zajistění, aby byla událost volána v případě, že je nějaký posluchač připojen
+            ValueChanged?.Invoke(value, max);
         }
 
 
@@ -38,7 +38,7 @@ namespace IresoftApplication
 
         public static int CalculateCountWords(string mainString)
         {
-            if (string.IsNullOrEmpty(mainString)) return 0;
+            if (mainString.Length == 0) return 0;
 
             int Count = mainString.Count(c => c == ' ');
 
@@ -52,40 +52,50 @@ namespace IresoftApplication
 
         public static int CalculateCountRadek(string mainString)
         {
-            if (string.IsNullOrEmpty(mainString)) return 0;
+            var count = 0;
 
-            int radek = mainString.Split('\n').Length;
+            using (System.IO.StringReader reader = new System.IO.StringReader(mainString))
+            {
+                while (reader.ReadLine() != null)
+                {
+                    count++;
+                }
+            }
 
-            return radek;
+            return count;
+
         }
 
         //METHODS FOR OPERATION B.
 
         public async Task<string> OdstranDiakritiku(int pocetZnaku, string mainString, CancellationToken cts)
         {
+
             int pocetZnakuTemp = pocetZnaku;
+
+            var stringBuilder = new StringBuilder();
             char[] buffer = new char[1];
-            StringBuilder stringBuilder = new StringBuilder();
             SendSignalToProgressBar(pocetZnaku, true);
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
             int read;
 
-            using (StringReader stringReader = new StringReader(mainString))
+            using (StringReader stringReader = new StringReader(mainString.Normalize(NormalizationForm.FormD)))
             {
                 while ((read = await stringReader.ReadAsync(buffer, cts)
                         .ConfigureAwait(false)) > 0)
                 {
                     char character = buffer[0];
 
-                    if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+                    var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(character);
+                    if (unicodeCategory != UnicodeCategory.NonSpacingMark)
                     {
                         stringBuilder.Append(character);
-                        SendSignalToProgressBar(pocetZnaku - (--pocetZnakuTemp), false);
+                        SendSignalToProgressBar(1, false);
                     }
                 }
             }
 
-            tcs.SetResult(stringBuilder.ToString());
+            tcs.SetResult(stringBuilder.ToString().Normalize(NormalizationForm.FormC));
 
             return await tcs.Task;
         }
@@ -97,6 +107,7 @@ namespace IresoftApplication
             int pocetRadkuTemp = pocetRadku;
             StringBuilder stringBuilder = new StringBuilder();
             SendSignalToProgressBar(pocetRadku, true);
+            SendSignalToProgressBar(-1, false);
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
             using (StringReader stringReader = new StringReader(mainString))
@@ -107,8 +118,9 @@ namespace IresoftApplication
                     if (!string.IsNullOrWhiteSpace(line.Trim()))
                     {
                         stringBuilder.Append(line);
-                        SendSignalToProgressBar(pocetRadku - (--pocetRadkuTemp), true);
+
                     }
+                    SendSignalToProgressBar(1, false);
                 }
             }
 
@@ -119,7 +131,6 @@ namespace IresoftApplication
 
         public async Task<string> OdstranMezeryInterpunkcniZnamenka(int pocetZnaku, string mainString, CancellationToken cts)
         {
-            int pocetZnakuTemp = pocetZnaku;
             char[] buffer = new char[1];
             StringBuilder stringBuilder = new StringBuilder();
             SendSignalToProgressBar(pocetZnaku, true);
@@ -136,8 +147,10 @@ namespace IresoftApplication
                     if (!char.IsWhiteSpace(character) && !char.IsPunctuation(character))
                     {
                         stringBuilder.Append(character);
-                        SendSignalToProgressBar(pocetZnaku - (--pocetZnakuTemp), false);
+
                     }
+
+                    SendSignalToProgressBar(1, false);
                 }
             }
 
@@ -148,29 +161,24 @@ namespace IresoftApplication
 
         internal async Task<string> LoadFileAsync(string path, CancellationToken cts)
         {
-            char[] buffer = new char[1];
+            char[] buffer = new char[1024];
             int read;
             var resultBuilder = new StringBuilder();
-
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
-            
 
             try
             {
+                SendSignalToProgressBar(1, true);
+
                 // Reader
                 using (StreamReader reader = new StreamReader(path, Encoding.UTF8))
                 {
-                    SendSignalToProgressBar(Convert.ToInt32(reader.BaseStream.Length), true);
                     //Dokumentace (3.příklad)
                     //Bude číst po bufferech dokud nebude 0
                     while ((read = await reader.ReadAsync(buffer, cts)
                         .ConfigureAwait(false)) > 0)
                     {
-                        await Task.Delay(250);
                         resultBuilder.Append(buffer, 0, read);
-                        // Raise the event
-                        Debug.WriteLine("Posílám do progress baru: " + read);
-                        SendSignalToProgressBar(read, false);
                     }
 
                 }
@@ -182,6 +190,10 @@ namespace IresoftApplication
                 // Handle errors that may occur during file reading
                 Console.WriteLine("Error while reading the file: " + ex.Message);
                 tcs.SetException(ex);
+            }
+            finally
+            {
+                SendSignalToProgressBar(1, false);
             }
 
             return await tcs.Task;
@@ -207,6 +219,14 @@ namespace IresoftApplication
             }
 
             return;
+        }
+
+        internal async Task ResetProgressBar()
+        {
+            await Task.Run(() =>
+            {
+                SendSignalToProgressBar(-1, false);
+            });
         }
     }
 }
