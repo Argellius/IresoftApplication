@@ -198,6 +198,7 @@
             // panel1
             // 
             panel1.BackColor = Color.White;
+            panel1.Controls.Add(uC_ProgressBar);
             panel1.Controls.Add(label_pocet_vet);
             panel1.Controls.Add(button_white_punc);
             panel1.Controls.Add(label_pocet_slov);
@@ -217,19 +218,20 @@
             panel1.Size = new Size(475, 316);
             panel1.TabIndex = 15;
             // 
-            // uC_ProgressBar1
+            // uC_ProgressBar
             // 
-            uC_ProgressBar.Location = new Point(561, 73);
-            uC_ProgressBar.Name = "uC_ProgressBar1";
+            uC_ProgressBar.Location = new Point(33, 67);
+            uC_ProgressBar.Name = "uC_ProgressBar";
             uC_ProgressBar.Size = new Size(338, 182);
             uC_ProgressBar.TabIndex = 16;
+            uC_ProgressBar.Visible = false;
+            uC_ProgressBar.Load += uC_ProgressBar_Load;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1051, 333);
-            Controls.Add(uC_ProgressBar);
+            ClientSize = new Size(504, 333);
             Controls.Add(panel1);
             Margin = new Padding(2);
             Name = "Form1";

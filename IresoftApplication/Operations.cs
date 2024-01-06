@@ -13,18 +13,27 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace IresoftApplication
 {
+    //Třída, kde se budou počitat všechny operace
     public class Operations
     {
+        //Komunikace s progressBarem
         public delegate void ValueChangedHandler(int value, bool max);
         public event ValueChangedHandler ValueChanged;
 
+        #region ProgressBar
         public void SendSignalToProgressBar(int value, bool max)
         {
             // Zajistění, aby byla událost volána v případě, že je nějaký posluchač připojen
             ValueChanged?.Invoke(value, max);
         }
+        internal void ResetProgressBar()
+        {
+            SendSignalToProgressBar(-1, false);
+        }
+        #endregion
 
-
+        #region Labely
+        //Obsluha labelů
         public static int CalculateCountSentences(string mainString)
         {
             if (string.IsNullOrEmpty(mainString)) return 0;
@@ -50,7 +59,7 @@ namespace IresoftApplication
             return mainString.ToCharArray().Count();
         }
 
-        public static int CalculateCountRadek(string mainString)
+        public static int CalculateCountLines(string mainString)
         {
             var count = 0;
 
@@ -65,14 +74,14 @@ namespace IresoftApplication
             return count;
 
         }
+        //Konec obsluhy labelů
+        #endregion
 
-        //METHODS FOR OPERATION B.
+        #region Metody
+        //Definice metod pro obsluhu tlačítek - diakritika, mezery, atd.
 
-        public async Task<string> OdstranDiakritiku(int pocetZnaku, string mainString, CancellationToken cts)
+        public async Task<string> RemoveDiacritics(int pocetZnaku, string mainString, CancellationToken cts)
         {
-
-            int pocetZnakuTemp = pocetZnaku;
-
             var stringBuilder = new StringBuilder();
             char[] buffer = new char[1];
             SendSignalToProgressBar(pocetZnaku, true);
@@ -90,24 +99,23 @@ namespace IresoftApplication
                     if (unicodeCategory != UnicodeCategory.NonSpacingMark)
                     {
                         stringBuilder.Append(character);
+                        await Task.Delay(500);
                         SendSignalToProgressBar(1, false);
                     }
                 }
             }
 
             tcs.SetResult(stringBuilder.ToString().Normalize(NormalizationForm.FormC));
-
             return await tcs.Task;
         }
 
 
 
-        public async Task<string> OdstranPrazdneRadky(int pocetRadku, string mainString, CancellationToken cts)
+        public async Task<string> RemoveEmptyLinesAsync(int pocetRadku, string mainString, CancellationToken cts)
         {
             int pocetRadkuTemp = pocetRadku;
             StringBuilder stringBuilder = new StringBuilder();
             SendSignalToProgressBar(pocetRadku, true);
-            SendSignalToProgressBar(-1, false);
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
             using (StringReader stringReader = new StringReader(mainString))
@@ -118,18 +126,16 @@ namespace IresoftApplication
                     if (!string.IsNullOrWhiteSpace(line.Trim()))
                     {
                         stringBuilder.Append(line);
-
                     }
                     SendSignalToProgressBar(1, false);
                 }
             }
 
             tcs.SetResult(stringBuilder.ToString());
-
             return await tcs.Task;
         }
 
-        public async Task<string> OdstranMezeryInterpunkcniZnamenka(int pocetZnaku, string mainString, CancellationToken cts)
+        public async Task<string> RemoveSpacesAndPunctuationAsync(int pocetZnaku, string mainString, CancellationToken cts)
         {
             char[] buffer = new char[1];
             StringBuilder stringBuilder = new StringBuilder();
@@ -147,15 +153,11 @@ namespace IresoftApplication
                     if (!char.IsWhiteSpace(character) && !char.IsPunctuation(character))
                     {
                         stringBuilder.Append(character);
-
                     }
-
                     SendSignalToProgressBar(1, false);
                 }
             }
-
             tcs.SetResult(stringBuilder.ToString());
-
             return await tcs.Task;
         }
 
@@ -169,7 +171,7 @@ namespace IresoftApplication
             try
             {
                 SendSignalToProgressBar(1, true);
-
+                
                 // Reader
                 using (StreamReader reader = new StreamReader(path, Encoding.UTF8))
                 {
@@ -180,9 +182,7 @@ namespace IresoftApplication
                     {
                         resultBuilder.Append(buffer, 0, read);
                     }
-
                 }
-
                 tcs.SetResult(resultBuilder.ToString());
             }
             catch (Exception ex)
@@ -199,16 +199,16 @@ namespace IresoftApplication
             return await tcs.Task;
         }
 
-        internal async Task saveFile(string path, StringBuilder mainString, CancellationToken cts)
+        internal async Task SaveStringToFileAsync(string path, StringBuilder mainString, CancellationToken cts)
         {
             try
             {
+                SendSignalToProgressBar(1, true);
+                
                 using (StreamWriter writer = new StreamWriter(path, false, Encoding.UTF8))
                 {
-                    SendSignalToProgressBar(1, true);
-
-                    await writer.WriteLineAsync(mainString, cts);
-
+                    await writer.WriteLineAsync(mainString, cts).ConfigureAwait(false);
+                    await Task.Delay(1000);
                     SendSignalToProgressBar(1, false);
                 }
 
@@ -221,12 +221,7 @@ namespace IresoftApplication
             return;
         }
 
-        internal async Task ResetProgressBar()
-        {
-            await Task.Run(() =>
-            {
-                SendSignalToProgressBar(-1, false);
-            });
-        }
+        //Konec metod
+        #endregion
     }
 }

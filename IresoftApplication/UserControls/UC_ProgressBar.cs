@@ -15,21 +15,27 @@ namespace IresoftApplication.UserControls
 {
     public partial class UC_ProgressBar : UserControl
     {
-
-        private Form1? parent;
+        //Value to display
         private int currentValue = 0;
-
+        private int progressBarValue = 0;
         private int MaxValue = 0;
+
+        private double currentValueCalc = 0;
+
+
+        //Komunikace s OperationsManagerem
+        public delegate void TriggerStopProcessingHandler();
+        public event TriggerStopProcessingHandler StopProcessing;
 
         public UC_ProgressBar()
         {
             InitializeComponent();
         }
 
-        public void setParent(Form1? form)
+        public void TriggerStopProcessing()
         {
-            parent = form as Form1 ?? throw new Exception();
-
+            // Zajistění, aby byla událost volána v případě, že je nějaký posluchač připojen
+            StopProcessing?.Invoke();
         }
 
         private void UC_ProgressBar_Load(object sender, EventArgs e)
@@ -40,7 +46,15 @@ namespace IresoftApplication.UserControls
 
         public void HandleValueChanged(int val, bool max)
         {
-            if (val == -1) { currentValue = 0; return; }
+            if (val == -1)
+            {
+                currentValue = 0;
+                currentValueCalc = 0;
+                setCurrentValue(currentValue);
+                this.setProgressBarValue(currentValue);
+                this.SetVisibility(false);
+                return;
+            }
 
             if (max)
             {
@@ -48,8 +62,33 @@ namespace IresoftApplication.UserControls
                 return;
             }
 
-            var value = ProcessValue(val);
+            ProcessValue(val);
+            this.setProgressBarValue(this.progressBarValue);
+            setCurrentValue(this.progressBarValue);
 
+            if (this.progressBarValue == 100)
+                this.SetVisibility(true);
+        }
+
+        private async void SetVisibility(bool hide)
+        {
+            if (this.Visible == false)
+                this.Visible = true;
+
+            if (hide)
+            {
+                await Task.Delay(1000);
+                if (this.InvokeRequired)
+                {
+                    this.Invoke((new Action(() => { this.Visible = false; }))); ;
+                }
+                else
+                    this.Visible = false;
+            }
+        }
+
+        private void setCurrentValue(int value)
+        {
             if (label_currentV.InvokeRequired)
             {
                 label_currentV.Invoke(new Action(() => { label_currentV.Text = value.ToString(); }));
@@ -60,13 +99,12 @@ namespace IresoftApplication.UserControls
             }
         }
 
-        private string ProcessValue(int value)
+        private void ProcessValue(int value)
         {
-            this.currentValue = currentValue + value;
-            var progressBarValue = Convert.ToInt16(Math.Round((double)currentValue / MaxValue * 100));
-            this.setProgressBarValue(progressBarValue);
+            this.currentValueCalc += value;
 
-            return progressBarValue.ToString();
+            this.currentValue = Convert.ToInt16(Math.Round((currentValueCalc / MaxValue) * 100));
+            this.progressBarValue = currentValue;
         }
 
         private void setProgressBarValue(int progressBarValue)
@@ -98,11 +136,9 @@ namespace IresoftApplication.UserControls
 
         private void button_storno_Click(object sender, EventArgs e)
         {
-            // Zrušte asynchronní načítání souboru, pokud je aktivní
-            if (parent != null)
-            {
-                parent.StopProcess();
-            }
+
+            TriggerStopProcessing();
+
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Text;
 
 namespace IresoftApplication
 {
+    //UI
     public partial class Form1 : Form
     {
         private OperationsManager operationManager;
@@ -14,13 +15,14 @@ namespace IresoftApplication
 
         public Form1()
         {
-            InitializeComponent();     
+            InitializeComponent();
             this.operationManager = new OperationsManager(this);
             openFileDialog.Multiselect = false;
             openFileDialog.Title = "Naètení souboru";
             openFileDialog.FileName = String.Empty;
             saveFileDialog.Filter = "Textové soubory (*.txt)|*.txt|CSV soubory (*.csv)|*.csv|Všechny soubory (*.*)|*.*";
             // Pøidání obslužné metody k události v objektu Operation
+            this.uC_ProgressBar.StopProcessing += this.operationManager.StopProcessing;
         }
 
         private void UserControl_SignalReceived(object sender, EventArgs e)
@@ -32,7 +34,7 @@ namespace IresoftApplication
         {
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                this.operationManager.StartLoadFile(openFileDialog.FileName.ToString());
+                this.operationManager.LoadFileAsync(openFileDialog.FileName.ToString());
             }
         }
 
@@ -59,28 +61,28 @@ namespace IresoftApplication
         //OPERATION BUTTONS
         private async void button_diacritic_Click(object sender, EventArgs e)
         {
-            await this.operationManager.DeleteDiacticInText();
+            await this.operationManager.RemoveDiacriticsTextAsync();
         }
 
-        private void button_copy_Click(object sender, EventArgs e)
+        private async void button_copy_Click(object sender, EventArgs e)
         {
-            this.operationManager.CopyOperation(this.saveFileDialog.FileName);
+            await this.operationManager.SaveStringToFileAsync(this.saveFileDialog.FileName);
         }
 
         private async void button_blank_lines_Click(object sender, EventArgs e)
         {
-            await this.operationManager.DeleteBlankLines();
+            await this.operationManager.RemoveEmptyLinesAsync();
 
         }
 
         private async void button_white_punc_Click(object sender, EventArgs e)
         {
-            await this.operationManager.DeleteWhiteLinesPuncChars();
+            await this.operationManager.RemoveSpacesAndPunctuationAsync();
         }
 
         internal void StopProcess()
         {
-            this.operationManager.StopProcessingFile();
+            this.operationManager.StopProcessing();
         }
 
         internal void SetProgressBar(CancellationToken cts)
@@ -93,34 +95,39 @@ namespace IresoftApplication
             uC_ProgressBar.Visible = v;
         }
 
-        internal void setPocetVet(string v)
+        internal void SetCountSentences(string v)
         {
             this.textBox_pocet_vet.Text = v;
         }
 
-        internal void setPocetSlov(string v)
+        internal void SetCountWords(string v)
         {
             this.textBox_pocet_slov.Text = v;
         }
 
-        internal void setPocetZnaku(string v)
+        internal void SetCountCharacters(string v)
         {
             this.textBox_pocet_znaku.Text = v;
         }
 
-        internal void setPocetRadku(string v)
+        internal void SetCountLines(string v)
         {
             this.textBox_pocet_radku.Text = v;
         }
 
-        internal int getPocetRadku()
+        internal int GetCountLines()
         {
             return Convert.ToInt32(this.textBox_pocet_radku.Text);
         }
 
-        internal int getPocetZnaku()
+        internal int GetCountCharacters()
         {
             return Convert.ToInt32(this.textBox_pocet_znaku.Text);
+        }
+
+        private void uC_ProgressBar_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
