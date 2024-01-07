@@ -19,16 +19,66 @@ namespace IresoftApplication
         //Komunikace s progressBarem
         public delegate void ValueChangedHandler(int value, bool max);
         public event ValueChangedHandler ValueChanged;
+        private int periodNumber = 0;
+        private int periodNumberCurrent = 0;
+
 
         #region ProgressBar
         public void SendSignalToProgressBar(int value, bool max)
         {
-            // Zajistění, aby byla událost volána v případě, že je nějaký posluchač připojen
-            ValueChanged?.Invoke(value, max);
+            //Resetování progressBaru
+            if (value == -1)
+            {
+                ValueChanged?.Invoke(-1, false);
+                periodNumber = 0;
+                periodNumberCurrent = 0;
+                return;
+            }
+
+            //Ukončení průběhu operace - odeslání zbytkových hodnot do progressBaru
+            if (value == -2)
+            {
+                ValueChanged?.Invoke(periodNumberCurrent, false);
+                periodNumberCurrent = 0;
+            }
+
+            //Schování PB
+            if (value == -3)
+                ValueChanged?.Invoke(-3, false);
+
+            //Odeslání maximální hodnoty do PB
+            if (max)
+            {
+                // Zajistění, aby byla událost volána v případě, že je nějaký posluchač připojen
+                ValueChanged?.Invoke(value, max);
+            }
+            //Odeslání aktuální hodnoty do PB
+            else
+            {
+
+                periodNumberCurrent += value;
+                //Odeslání do PB hodnotu pouze tehdy, pokud přesahuje 1 z celkového množství
+                if (periodNumberCurrent >= periodNumber)
+                {
+                    ValueChanged?.Invoke(periodNumberCurrent, false);
+                    periodNumberCurrent = 0;
+                }
+            }
         }
+
+        //Resetování progressBaru
         internal void ResetProgressBar()
         {
             SendSignalToProgressBar(-1, false);
+        }
+
+        //Nastavení progressBaru
+        private void setttingNotificationProgressBar(int pocetZnaku)
+        {
+            //Interval po kterých se bude aktualizovat progressBar
+            periodNumber = Convert.ToInt32(Math.Round((double)pocetZnaku / 100, 0, MidpointRounding.ToPositiveInfinity));
+            //Poslání maximální hodnoty do PB
+            SendSignalToProgressBar(pocetZnaku, true);
         }
         #endregion
 
@@ -49,9 +99,9 @@ namespace IresoftApplication
         {
             if (mainString.Length == 0) return 0;
 
-            int Count = mainString.Count(c => c == ' ');
+            string[] words = mainString.Split(new char[] { ' ', '\t', '\n', '\r', '.' }, StringSplitOptions.RemoveEmptyEntries);
 
-            return Count;
+            return words.Length;
         }
 
         public static int CalculateCountLetter(string mainString)
@@ -84,7 +134,8 @@ namespace IresoftApplication
         {
             var stringBuilder = new StringBuilder();
             char[] buffer = new char[1];
-            SendSignalToProgressBar(pocetZnaku, true);
+
+            setttingNotificationProgressBar(pocetZnaku);
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
             int read;
 
@@ -99,23 +150,22 @@ namespace IresoftApplication
                     if (unicodeCategory != UnicodeCategory.NonSpacingMark)
                     {
                         stringBuilder.Append(character);
-                        await Task.Delay(500);
                         SendSignalToProgressBar(1, false);
                     }
                 }
+
+                SendSignalToProgressBar(-2, false);
             }
 
             tcs.SetResult(stringBuilder.ToString().Normalize(NormalizationForm.FormC));
             return await tcs.Task;
         }
 
-
-
         public async Task<string> RemoveEmptyLinesAsync(int pocetRadku, string mainString, CancellationToken cts)
         {
             int pocetRadkuTemp = pocetRadku;
             StringBuilder stringBuilder = new StringBuilder();
-            SendSignalToProgressBar(pocetRadku, true);
+            setttingNotificationProgressBar(pocetRadku);
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
             using (StringReader stringReader = new StringReader(mainString))
@@ -129,6 +179,7 @@ namespace IresoftApplication
                     }
                     SendSignalToProgressBar(1, false);
                 }
+                SendSignalToProgressBar(-2, false);
             }
 
             tcs.SetResult(stringBuilder.ToString());
@@ -139,7 +190,7 @@ namespace IresoftApplication
         {
             char[] buffer = new char[1];
             StringBuilder stringBuilder = new StringBuilder();
-            SendSignalToProgressBar(pocetZnaku, true);
+            setttingNotificationProgressBar(pocetZnaku);
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
             int read;
 
@@ -156,6 +207,7 @@ namespace IresoftApplication
                     }
                     SendSignalToProgressBar(1, false);
                 }
+                SendSignalToProgressBar(-2, false);
             }
             tcs.SetResult(stringBuilder.ToString());
             return await tcs.Task;
@@ -170,8 +222,8 @@ namespace IresoftApplication
 
             try
             {
-                SendSignalToProgressBar(1, true);
-                
+                setttingNotificationProgressBar(1);
+
                 // Reader
                 using (StreamReader reader = new StreamReader(path, Encoding.UTF8))
                 {
@@ -203,12 +255,11 @@ namespace IresoftApplication
         {
             try
             {
-                SendSignalToProgressBar(1, true);
-                
+                setttingNotificationProgressBar(1);
+
                 using (StreamWriter writer = new StreamWriter(path, false, Encoding.UTF8))
                 {
                     await writer.WriteLineAsync(mainString, cts).ConfigureAwait(false);
-                    await Task.Delay(1000);
                     SendSignalToProgressBar(1, false);
                 }
 

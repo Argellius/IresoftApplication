@@ -220,7 +220,8 @@
             // 
             // uC_ProgressBar
             // 
-            uC_ProgressBar.Location = new Point(33, 67);
+            uC_ProgressBar.BorderStyle = BorderStyle.FixedSingle;
+            uC_ProgressBar.Location = new Point(49, 79);
             uC_ProgressBar.Name = "uC_ProgressBar";
             uC_ProgressBar.Size = new Size(338, 182);
             uC_ProgressBar.TabIndex = 16;

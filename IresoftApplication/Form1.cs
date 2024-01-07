@@ -66,6 +66,12 @@ namespace IresoftApplication
 
         private async void button_copy_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrEmpty(saveFileDialog.FileName))
+            {
+                MessageBox.Show("Není vybrán cílový soubor");
+                return;
+            }
+
             await this.operationManager.SaveStringToFileAsync(this.saveFileDialog.FileName);
         }
 

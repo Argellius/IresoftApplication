@@ -36,10 +36,10 @@
             button_storno = new Button();
             SuspendLayout();
             // 
-            // progressBar1
+            // progressBar
             // 
             progressBar.Location = new Point(16, 42);
-            progressBar.Name = "progressBar1";
+            progressBar.Name = "progressBar";
             progressBar.Size = new Size(299, 23);
             progressBar.TabIndex = 0;
             // 
@@ -97,6 +97,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BorderStyle = BorderStyle.FixedSingle;
             Controls.Add(button_storno);
             Controls.Add(label_maxV);
             Controls.Add(label3);
@@ -104,8 +105,7 @@
             Controls.Add(lbl_operace);
             Controls.Add(progressBar);
             Name = "UC_ProgressBar";
-            Size = new Size(338, 182);
-            Load += UC_ProgressBar_Load;
+            Size = new Size(336, 180);
             ResumeLayout(false);
             PerformLayout();
         }

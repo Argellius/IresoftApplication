@@ -38,53 +38,51 @@ namespace IresoftApplication.UserControls
             StopProcessing?.Invoke();
         }
 
-        private void UC_ProgressBar_Load(object sender, EventArgs e)
+        public async void HandleValueChanged(int val, bool max)
         {
-
-        }
-
-
-        public void HandleValueChanged(int val, bool max)
-        {
-            if (val == -1)
+            //Hodnota restartování progressBaru
+            if (val == -1 || val == -3)
             {
                 currentValue = 0;
                 currentValueCalc = 0;
                 setCurrentValue(currentValue);
                 this.setProgressBarValue(currentValue);
-                this.SetVisibility(false);
+                this.SetVisibility(true);
                 return;
             }
 
+            if (val == -3) { 
+                this.SetVisibility(false);
+            }
+
+            //Nastavení maximální hodnoty
             if (max)
             {
                 setMaxValue(val);
                 return;
             }
 
+            //Nastavení aktuální hodnoty
             ProcessValue(val);
             this.setProgressBarValue(this.progressBarValue);
             setCurrentValue(this.progressBarValue);
 
             if (this.progressBarValue == 100)
-                this.SetVisibility(true);
+            {
+                await Task.Delay(750);
+                this.SetVisibility(false);
+            }
         }
 
-        private async void SetVisibility(bool hide)
+        private void SetVisibility(bool hide)
         {
-            if (this.Visible == false)
-                this.Visible = true;
-
-            if (hide)
+            if (this.InvokeRequired)
             {
-                await Task.Delay(1000);
-                if (this.InvokeRequired)
-                {
-                    this.Invoke((new Action(() => { this.Visible = false; }))); ;
-                }
-                else
-                    this.Visible = false;
+                this.Invoke((new Action(() => { this.Visible = hide; }))); ;
             }
+            else
+                this.Visible = hide;
+
         }
 
         private void setCurrentValue(int value)

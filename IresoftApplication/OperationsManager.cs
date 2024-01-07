@@ -24,16 +24,16 @@ namespace IresoftApplication
             this.operation = new Operations();
             this.cts = new CancellationTokenSource();
             this.operation.ValueChanged += this.parent.uC_ProgressBar.HandleValueChanged;
-        }       
+        }
 
         #region Pomocné operace pro načtení souboru
         //Prefore/Finish before/after load file
         //true = before
         //false = after
-        private void PrepareFinishLoadFile(bool prepare)
+        private void PrepareBeforeMethod(bool prepare)
         {
             parent.Cursor = prepare ? Cursors.WaitCursor : Cursors.Default;
-            parent.setEnableUI(true);
+            parent.setEnableUI(!prepare);
         }
 
         private bool TestValidPath(string path)
@@ -115,65 +115,79 @@ namespace IresoftApplication
                 return;
             }
 
-            this.ResetProgressBar();
-            Task<string> resultTask = operation.LoadFileAsync(path, cts.Token);
+            this.PrepareForStartMethod();
+
             try
             {
-                this.PrepareFinishLoadFile(true);
-                string result = await resultTask;
-                this.mainString.Clear().Append(result);
-                this.PrepareFinishLoadFile(false);
-                this.Calculate();
+                this.PrepareBeforeMethod(true);
+                string result = await Task.Run(() => operation.LoadFileAsync(path, cts.Token));
+                this.mainString.Clear().Append(result);                
             }
             catch (OperationCanceledException)
             {
                 MessageBox.Show("Operation canceled.");
             }
+            finally
+            {
+                this.PrepareBeforeMethod(false);
+                this.Calculate();
+            }
+        }
+
+        private void PrepareForStartMethod()
+        {
+            this.ResetProgressBar();
+            this.PrepareBeforeMethod(true);
         }
 
         internal async Task SaveStringToFileAsync(string path)
         {
 
-            // Get the selected file name and create a StreamWriter
-            this.ResetProgressBar();
-            Task resultTask = this.operation.SaveStringToFileAsync(path, mainString, cts.Token);
+            this.PrepareForStartMethod(); 
+
             try
             {
-                await resultTask;
-                this.Calculate();
+                await Task.Run(() => this.operation.SaveStringToFileAsync(path, mainString, cts.Token));
             }
             catch (OperationCanceledException)
             {
                 MessageBox.Show("Operation canceled.");
+            }
+            finally
+            {
+                this.PrepareBeforeMethod(false);
+                this.Calculate();
             }
 
         }
 
         internal async Task RemoveEmptyLinesAsync()
         {
-            //KONTROLY
-            this.ResetProgressBar();
-            Task<string> resultTask = this.operation.RemoveEmptyLinesAsync(this.GetCountLines(), this.mainString.ToString(), cts.Token);
+            this.PrepareForStartMethod();
             try
             {
-                string result = await resultTask;
+                string result = await Task.Run(() => this.operation.RemoveEmptyLinesAsync(this.GetCountLines(), this.mainString.ToString(), cts.Token));
                 this.mainString.Clear().Append(result);
-                this.Calculate();
             }
             catch (OperationCanceledException)
             {
                 MessageBox.Show("Operation canceled.");
+            }
+            finally
+            {
+                this.PrepareBeforeMethod(false);
+                this.Calculate();
             }
 
         }
 
         internal async Task RemoveDiacriticsTextAsync()
         {
-            this.ResetProgressBar();
-            Task<string> resultTask = this.operation.RemoveDiacritics(this.GetCountCharacters(), this.mainString.ToString(), cts.Token);
+            this.PrepareForStartMethod();
+
             try
             {
-                string result = await resultTask;
+                string result = await Task.Run(() => this.operation.RemoveDiacritics(this.GetCountCharacters(), this.mainString.ToString(), cts.Token));
                 this.mainString.Clear().Append(result);
                 this.SetCountCharacters();
             }
@@ -181,23 +195,33 @@ namespace IresoftApplication
             {
                 MessageBox.Show("Operation canceled.");
             }
+            finally
+            {
+                this.PrepareBeforeMethod(false);
+                this.Calculate();
+            }
         }
 
 
 
         internal async Task RemoveSpacesAndPunctuationAsync()
         {
-            this.ResetProgressBar();
-            Task<string> resultTask = this.operation.RemoveSpacesAndPunctuationAsync(this.GetCountCharacters(), this.mainString.ToString(), cts.Token);
+            this.PrepareForStartMethod();
+
             try
             {
-                string result = await resultTask;
+                string result = await Task.Run(() => this.operation.RemoveSpacesAndPunctuationAsync(this.GetCountCharacters(), this.mainString.ToString(), cts.Token));
                 this.mainString.Clear().Append(result);
                 this.Calculate();
             }
             catch (OperationCanceledException)
             {
                 MessageBox.Show("Operation canceled.");
+            }
+            finally
+            {
+                this.PrepareBeforeMethod(false);
+                this.Calculate();
             }
         }
 
@@ -217,6 +241,7 @@ namespace IresoftApplication
             if (cts != null)
             {
                 cts.Cancel();
+
             }
         }
 
