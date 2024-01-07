@@ -60,6 +60,13 @@ namespace IresoftApplication
             }
         }
 
+
+        private void PrepareForStartMethod()
+        {
+            this.ResetProgressBar();
+            this.PrepareBeforeMethod(true);
+        }
+
         #endregion
 
         #region Metody pro statistiky
@@ -132,12 +139,6 @@ namespace IresoftApplication
                 this.PrepareBeforeMethod(false);
                 this.Calculate();
             }
-        }
-
-        private void PrepareForStartMethod()
-        {
-            this.ResetProgressBar();
-            this.PrepareBeforeMethod(true);
         }
 
         internal async Task SaveStringToFileAsync(string path)
