@@ -11,7 +11,7 @@ namespace IresoftApplication
     {
         private OperationsManager operationManager;
 
-        public object CilovaCesta { get; private set; }
+        public string CilovaCesta { get; private set; } = String.Empty;
 
         public Form1()
         {
@@ -21,21 +21,9 @@ namespace IresoftApplication
             openFileDialog.Title = "Naètení souboru";
             openFileDialog.FileName = String.Empty;
             saveFileDialog.Filter = "Textové soubory (*.txt)|*.txt|CSV soubory (*.csv)|*.csv|Všechny soubory (*.*)|*.*";
+            
             // Pøidání obslužné metody k události v objektu Operation
             this.uC_ProgressBar.StopProcessing += this.operationManager.StopProcessing;
-        }
-
-        private void UserControl_SignalReceived(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button_load_Click(object sender, EventArgs e)
-        {
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                this.operationManager.LoadFileAsync(openFileDialog.FileName.ToString());
-            }
         }
 
         public void setEnableUI(bool v)
@@ -49,6 +37,16 @@ namespace IresoftApplication
             this.button_white_punc.Enabled = v;
         }
 
+        //OPERATION BUTTONS
+        #region Buttons
+        private void button_load_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                this.operationManager.LoadFileAsync(openFileDialog.FileName.ToString());
+            }
+        }
+
         private void button_save_Click(object sender, EventArgs e)
         {
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
@@ -58,7 +56,6 @@ namespace IresoftApplication
             }
         }
 
-        //OPERATION BUTTONS
         private async void button_diacritic_Click(object sender, EventArgs e)
         {
             await this.operationManager.RemoveDiacriticsTextAsync();
@@ -86,20 +83,7 @@ namespace IresoftApplication
             await this.operationManager.RemoveSpacesAndPunctuationAsync();
         }
 
-        internal void StopProcess()
-        {
-            this.operationManager.StopProcessing();
-        }
-
-        internal void SetProgressBar(CancellationToken cts)
-        {
-
-        }
-
-        internal void ShowProgressBar(bool v)
-        {
-            uC_ProgressBar.Visible = v;
-        }
+        #endregion
 
         internal void SetCountSentences(string v)
         {
@@ -129,11 +113,6 @@ namespace IresoftApplication
         internal int GetCountCharacters()
         {
             return Convert.ToInt32(this.textBox_pocet_znaku.Text);
-        }
-
-        private void uC_ProgressBar_Load(object sender, EventArgs e)
-        {
-
         }
     }
 }

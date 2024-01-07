@@ -227,7 +227,6 @@
             uC_ProgressBar.Size = new Size(338, 182);
             uC_ProgressBar.TabIndex = 16;
             uC_ProgressBar.Visible = false;
-            uC_ProgressBar.Load += uC_ProgressBar_Load;
             // 
             // Form1
             // 
@@ -262,7 +261,6 @@
         private System.Windows.Forms.Button button_diacritic;
         private System.Windows.Forms.Button button_blank_line;
         private System.Windows.Forms.Button button_white_punc;
-        private ProgressBar progressBar1;
         private Panel panel1;
         public UserControls.UC_ProgressBar uC_ProgressBar;
     }
