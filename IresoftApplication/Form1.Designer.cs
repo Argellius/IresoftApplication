@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             label_pocet_vet = new Label();
             label_pocet_slov = new Label();
             label_pocet_znaku = new Label();
@@ -234,6 +235,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(504, 333);
             Controls.Add(panel1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(2);
             Name = "Form1";
             Text = "Form1";
